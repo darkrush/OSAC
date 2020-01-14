@@ -1,0 +1,8 @@
+python runner.py main/SAC_aux.py --config configs/SAC_swim_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_0.0_Hswim_00.1_greedy --beta 0.0 --aux_coef 0.0 --task_coef00 00.1 --task_coef05 -0.5
+python runner.py main/SAC_aux.py --config configs/SAC_swim_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_0.0_Hswim_0.07_greedy --beta 0.0 --aux_coef 0.0 --task_coef00 0.07 --task_coef05 -0.5
+python runner.py main/SAC_aux.py --config configs/SAC_swim_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_0.0_Hswim_0.05_greedy --beta 0.0 --aux_coef 0.0 --task_coef00 0.05 --task_coef05 -0.5
+python runner.py main/SAC_aux.py --config configs/SAC_swim_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_0.0_Hswim_0.036_greedy --beta 0.0 --aux_coef 0.0 --task_coef00 0.036 --task_coef05 -0.5
+python runner.py main/SAC_aux.py --config configs/SAC_swim_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_10_Hswim_00.1_greedy --beta 10 --aux_coef 0.0   --task_coef00 00.1 --task_coef05 -0.5
+python runner.py main/SAC_aux.py --config configs/SAC_swim_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_10_Hswim_0.07_greedy --beta 10 --aux_coef 0.0   --task_coef00 0.07 --task_coef05 -0.5
+python runner.py main/SAC_aux.py --config configs/SAC_swim_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_10_Hswim_0.05_greedy --beta 10 --aux_coef 0.0   --task_coef00 0.05 --task_coef05 -0.5
+python runner.py main/SAC_aux.py --config configs/SAC_swim_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_10_Hswim_0.036_greedy --beta 10 --aux_coef 0.0   --task_coef00 0.036 --task_coef05 -0.5
