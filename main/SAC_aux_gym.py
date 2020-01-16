@@ -219,8 +219,7 @@ def run():
             last_state = state_n
             cum_reward+=reward
             data_idx+=1
-        if epoch == 0:
-            continue
+
         for i in range(args.updates_per_step):
             # Update parameters of all the networks
             critic_1_loss, critic_2_loss,r1_loss,r2_loss,ns1_loss,ns2_loss, policy_loss, ent_loss, alpha,UCB = agent.update_parameters(memory, updates)
@@ -230,8 +229,10 @@ def run():
         def policy(obs):
             action = agent.select_action(obs,eval = True)
             return action
-
-        eval_return = gym_evaluate(policy, args.exp_name, DEFAULT_DEVICE)
+        if (1+epoch)%10 ==0:
+            eval_return = gym_evaluate(policy, args.exp_name, DEFAULT_DEVICE)
+            logger.append_data('eval_return',data_idx,eval_return)
+            logger.add_log('eval_return: %f, '%eval_return)
 
 
         logger.append_data('critic_1_loss',data_idx,critic_1_loss)
@@ -244,10 +245,9 @@ def run():
         logger.append_data('policy_loss',data_idx,policy_loss)
         logger.append_data('ent_loss',data_idx,ent_loss)
         logger.append_data('alpha',data_idx,alpha)
-        logger.append_data('eval_return',data_idx,eval_return)
+        
         logger.append_data('UCB',data_idx,UCB)
         logger.add_log('epoch %d, '%epoch + 
-                       'eval_return: %f, '%eval_return +
                        'UCB: %f, '%UCB +
                        'critic_1_loss: %f, '%critic_1_loss +
                        'critic_2_loss: %f, '%critic_2_loss +
