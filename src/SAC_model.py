@@ -67,7 +67,7 @@ class Q_phi_Network(torch.nn.Module):
         self.linear2 = torch.nn.Linear(hidden_dim, hidden_dim)
         self.linear3_1 = torch.nn.Linear(hidden_dim, 1)
         self.linear3_2 = torch.nn.Linear(hidden_dim, 1)
-        self.linear3_3 = torch.nn.Linear(hidden_dim, 1)
+        self.linear3_3 = torch.nn.Linear(hidden_dim, num_inputs)
         self.LN1 = torch.nn.LayerNorm(hidden_dim)
         self.LN2 = torch.nn.LayerNorm(hidden_dim)
 
@@ -77,7 +77,7 @@ class Q_phi_Network(torch.nn.Module):
         self.linear6 = torch.nn.Linear(hidden_dim, 1)
         self.linear6_1 = torch.nn.Linear(hidden_dim, 1)
         self.linear6_2 = torch.nn.Linear(hidden_dim, 1)
-        self.linear6_3 = torch.nn.Linear(hidden_dim, 1)
+        self.linear6_3 = torch.nn.Linear(hidden_dim, num_inputs)
         self.LN3 = torch.nn.LayerNorm(hidden_dim)
         self.LN4 = torch.nn.LayerNorm(hidden_dim)
 

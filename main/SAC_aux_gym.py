@@ -2,6 +2,7 @@ from copy import deepcopy
 import torch
 import numpy
 import os
+import gym
 import sys
 sys.path.append("..")
 from utils.argpaser import Singleton_argpaser as args
@@ -10,7 +11,7 @@ from utils.logger import Singleton_logger as logger
 from src.NER import NEReplay
 from src.task_set import TaskSet
 from src.SAC_model import ValueNetwork,Q_phi_Network,QNetwork,GaussianPolicy,DeterministicPolicy
-from src.evaluation import evaluate
+from src.gym_evaluation import gym_evaluate
 
 DEFAULT_DEVICE = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -73,21 +74,13 @@ class SAC(object):
             with torch.no_grad():
                 new_number = len(self.dirty_batch[0])
                 
-                state_batch = torch.tensor(self.dirty_batch[0]).to(DEFAULT_DEVICE)
-                action_batch = torch.tensor(self.dirty_batch[1]).to(DEFAULT_DEVICE)
+                state_batch = torch.tensor(self.dirty_batch[0],dtype=torch.float32).squeeze(1).to(DEFAULT_DEVICE)
+                action_batch = torch.tensor(self.dirty_batch[1],dtype=torch.float32).to(DEFAULT_DEVICE)
                 _, _,_,_,_,_,phi1, _ = self.critic(state_batch, action_batch)
 
-                #temp_coef = self.feature_number/(self.feature_number+new_number)
-                #self.matrix=temp_coef*self.matrix+torch.mm(phi1.transpose(0,1),phi1)/(self.feature_number+new_number)
-                sys_bit1 = torch.allclose(self.matrix,self.matrix.transpose(0,1))
                 p_sum = torch.mm(phi1.transpose(0,1),phi1)
-                sys_bit2 = torch.allclose(p_sum,p_sum.transpose(0,1))
                 self.matrix=self.matrix+p_sum
-                sys_bit3 = torch.allclose(self.matrix,self.matrix.transpose(0,1))
-                #print(sys_bit1,sys_bit2,sys_bit3)
-                #self.feature_number += new_number
                 self.inv_matrix = torch.cholesky_inverse(torch.cholesky(self.matrix+10*torch.eye(256,256).to(DEFAULT_DEVICE)))
-                #self.inv_matrix = torch.inverse(self.matrix+torch.eye(256,256).to(DEFAULT_DEVICE)*(1/self.feature_number))
                 self.dirty_batch = [[],[]]
 
 
@@ -96,10 +89,9 @@ class SAC(object):
         temp_list = []
         for key in ['s','a','s_n','r','not_done']:
             data_list = [i[key] for i in batch]
-            data_tenser = torch.tensor(data_list,dtype=torch.float).unsqueeze(1).to(DEFAULT_DEVICE)
+            data_tenser = torch.tensor(data_list,dtype=torch.float).to(DEFAULT_DEVICE)
             temp_list.append(data_tenser)
         state_batch,action_batch,next_state_batch,reward_batch,mask_batch = temp_list
-
         qf1, qf2,r1,r2,ns1,ns2, phi1, _ = self.critic(state_batch, action_batch)  # Two Q-functions to mitigate positive bias in the policy improvement step
 
         with torch.no_grad():
@@ -180,12 +172,9 @@ class SAC(object):
             self.critic.load_state_dict(torch.load(critic_path))
 
 def run():
-    task_set = TaskSet(args.exp_name)
-    task_set.set_coef(args)
-    env = task_set.get_env()
-    
+    env = gym.make(args.exp_name)
+        
     memory = NEReplay(args.buffer_size)
-
     agent = SAC(env.observation_space.shape[0], env.action_space)
 
     data_idx = 0
@@ -195,14 +184,14 @@ def run():
     for epoch in range(args.epoch_number):
         for _ in range(args.rollout_step):
             if epoch == 0:
-                action = numpy.random.random()*2-1
+                action = numpy.random.random(size = [1])*2-1
             else:
-                obs = torch.tensor([[last_state]],dtype= torch.float32).to(DEFAULT_DEVICE)
-                action = agent.select_action(obs,eval = False).cpu().item()
-            
+                obs = torch.tensor(last_state,dtype= torch.float32).to(DEFAULT_DEVICE).squeeze().unsqueeze(0)
+                with torch.no_grad():
+                    action = [agent.select_action(obs,eval = False).cpu().item()]
             state_n, reward, done, info = env.step(action)
 
-            
+            state_n = state_n.tolist()
 
             logger.append_data('state_buffer',data_idx,last_state)
             logger.append_data('action_buffer',data_idx,action)
@@ -220,8 +209,12 @@ def run():
                     masks = 0.0
             if args.exp_name == 'ccb':
                 masks = 0.0
-            agent.update_matrix(last_state,action)
-            memory.add(0,{'s':last_state,'a':action,'s_n':state_n,'r':reward,'not_done': masks})
+            agent.update_matrix(last_state,action[0])
+            memory.add(0,{'s':numpy.array(last_state).squeeze().tolist(),
+                          'a':action,
+                          's_n':numpy.array(state_n).squeeze().tolist(),
+                          'r':[reward],
+                          'not_done': [masks]})
 
             last_state = state_n
             cum_reward+=reward
@@ -238,7 +231,7 @@ def run():
             action = agent.select_action(obs,eval = True)
             return action
 
-        eval_return = evaluate(policy, args.exp_name, DEFAULT_DEVICE)
+        eval_return = gym_evaluate(policy, args.exp_name, DEFAULT_DEVICE)
 
 
         logger.append_data('critic_1_loss',data_idx,critic_1_loss)

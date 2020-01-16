@@ -5,7 +5,7 @@ from multiprocessing import Process
 from multiprocessing import Manager
 
 
-MAX_TASK_NUM = [4,4]
+MAX_TASK_NUM = [2,2]
 DEVICE_LIST = ['0','1']
 
 m = Manager()
