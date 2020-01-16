@@ -101,7 +101,6 @@ class SAC(object):
             qf1_next_target, qf2_next_target,_,_,_,_,_,_ = self.critic_target(next_state_batch, next_state_action)
             min_qf_next_target = torch.min(qf1_next_target, qf2_next_target) - self.alpha * next_state_log_pi
             next_q_value = reward_batch + UCB + mask_batch * self.gamma * (min_qf_next_target)
-            next_q_value = torch.clamp(next_q_value,max = 10.0/(1-self.gamma))
             UCB_logs = UCB.mean().cpu()
 
         
@@ -193,9 +192,9 @@ def run():
 
             state_n = state_n.tolist()
 
-            logger.append_data('state_buffer',data_idx,last_state)
-            logger.append_data('action_buffer',data_idx,action)
-            logger.append_data('reward_buffer',data_idx,reward)
+            #logger.append_data('state_buffer',data_idx,last_state)
+            #logger.append_data('action_buffer',data_idx,action)
+            #logger.append_data('reward_buffer',data_idx,reward)
 
             if done :
                 logger.append_data('cum_reward',data_idx,cum_reward)
@@ -229,34 +228,33 @@ def run():
         def policy(obs):
             action = agent.select_action(obs,eval = True)
             return action
-        if (1+epoch)%10 ==0:
+        if (1+epoch)%1000 ==0:
             eval_return = gym_evaluate(policy, args.exp_name, DEFAULT_DEVICE)
             logger.append_data('eval_return',data_idx,eval_return)
             logger.add_log('eval_return: %f, '%eval_return)
 
 
-        logger.append_data('critic_1_loss',data_idx,critic_1_loss)
-        logger.append_data('critic_2_loss',data_idx,critic_2_loss)
-        logger.append_data('r1_loss',data_idx,r1_loss)
-        logger.append_data('r2_loss',data_idx,r2_loss)
-        logger.append_data('ns1_loss',data_idx,ns1_loss)
-        logger.append_data('ns2_loss',data_idx,ns2_loss)
+            logger.append_data('critic_1_loss',data_idx,critic_1_loss)
+            logger.append_data('critic_2_loss',data_idx,critic_2_loss)
+            logger.append_data('r1_loss',data_idx,r1_loss)
+            logger.append_data('r2_loss',data_idx,r2_loss)
+            logger.append_data('ns1_loss',data_idx,ns1_loss)
+            logger.append_data('ns2_loss',data_idx,ns2_loss)
+            logger.append_data('policy_loss',data_idx,policy_loss)
+            logger.append_data('ent_loss',data_idx,ent_loss)
+            logger.append_data('alpha',data_idx,alpha)
         
-        logger.append_data('policy_loss',data_idx,policy_loss)
-        logger.append_data('ent_loss',data_idx,ent_loss)
-        logger.append_data('alpha',data_idx,alpha)
-        
-        logger.append_data('UCB',data_idx,UCB)
-        logger.add_log('epoch %d, '%epoch + 
-                       'UCB: %f, '%UCB +
-                       'critic_1_loss: %f, '%critic_1_loss +
-                       'critic_2_loss: %f, '%critic_2_loss +
-                       'r1_loss: %f, '%r1_loss +
-                       'r2_loss: %f, '%r2_loss +
-                       'ns1_loss: %f, '%ns1_loss +
-                       'ns2_loss: %f, '%ns2_loss +
-                       'policy_loss: %f, '%policy_loss +
-                       'ent_loss: %f, '%ent_loss +
-                       'alpha: %f, '%alpha)
-        logger.dump_log()
-        logger.dump_data(True)
+            logger.append_data('UCB',data_idx,UCB)
+            logger.add_log('epoch %d, '%epoch + 
+                           'UCB: %f, '%UCB +
+                           'critic_1_loss: %f, '%critic_1_loss +
+                           'critic_2_loss: %f, '%critic_2_loss +
+                           'r1_loss: %f, '%r1_loss +
+                           'r2_loss: %f, '%r2_loss +
+                           'ns1_loss: %f, '%ns1_loss +
+                           'ns2_loss: %f, '%ns2_loss +
+                           'policy_loss: %f, '%policy_loss +
+                           'ent_loss: %f, '%ent_loss +
+                           'alpha: %f, '%alpha)
+            logger.dump_log()
+            logger.dump_data(True)
