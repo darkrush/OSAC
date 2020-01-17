@@ -9,18 +9,16 @@ import gym
 #from a2c_ppo_acktr import utils
 #from a2c_ppo_acktr.envs import make_vec_envs
 
-
-def gym_evaluate(policy, env_name, device):
+def gym_evaluate(policy, env_name, device, times=1):
     eval_envs = gym.make(args.exp_name)
     eval_episode_rewards = []
 
     obs = eval_envs.reset()
     cum_reward = 0
-    while len(eval_episode_rewards) < 10:
+    while len(eval_episode_rewards) < times:
         obs = torch.tensor([[obs]],dtype= torch.float32).to(device)
         with torch.no_grad():
-            action= policy(obs)
-        action = torch.clamp(action,max = 1.0,min  = -1.0).cpu()
+            action= policy(obs).squeeze().cpu().numpy()
         # Obser reward and next obs
         obs, reward, done, _ = eval_envs.step(action)
         cum_reward += reward
@@ -28,4 +26,4 @@ def gym_evaluate(policy, env_name, device):
             eval_episode_rewards.append(cum_reward)
             cum_reward = 0
             obs = eval_envs.reset()
-    return sum(eval_episode_rewards)/10.0
+    return sum(eval_episode_rewards)/times
