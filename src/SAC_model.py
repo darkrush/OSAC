@@ -12,22 +12,6 @@ def weights_init_(m):
         torch.nn.init.constant_(m.bias, 0)
 
 
-class ValueNetwork(torch.nn.Module):
-    def __init__(self, num_inputs, hidden_dim = 256):
-        super(ValueNetwork, self).__init__()
-
-        self.linear1 = torch.nn.Linear(num_inputs, hidden_dim)
-        self.linear2 = torch.nn.Linear(hidden_dim, hidden_dim)
-        self.linear3 = torch.nn.Linear(hidden_dim, 1)
-
-        self.apply(weights_init_)
-
-    def forward(self, state):
-        x = torch.nn.functional.relu(self.linear1(state))
-        x = torch.nn.functional.relu(self.linear2(x))
-        x = self.linear3(x)
-        return x
-
 
 class QNetwork(torch.nn.Module):
     def __init__(self, num_inputs, num_actions, hidden_dim = 256):
@@ -65,9 +49,7 @@ class Q_phi_Network(torch.nn.Module):
         # Q1 architecture
         self.linear1 = torch.nn.Linear(num_inputs + num_actions, hidden_dim)
         self.linear2 = torch.nn.Linear(hidden_dim, hidden_dim)
-        self.linear3_1 = torch.nn.Linear(hidden_dim, 1)
-        self.linear3_2 = torch.nn.Linear(hidden_dim, 1)
-        self.linear3_3 = torch.nn.Linear(hidden_dim, num_inputs)
+        self.linear3 = torch.nn.Linear(hidden_dim, 1)
         self.LN1 = torch.nn.LayerNorm(hidden_dim)
         self.LN2 = torch.nn.LayerNorm(hidden_dim)
 
@@ -75,9 +57,6 @@ class Q_phi_Network(torch.nn.Module):
         self.linear4 = torch.nn.Linear(num_inputs + num_actions, hidden_dim)
         self.linear5 = torch.nn.Linear(hidden_dim, hidden_dim)
         self.linear6 = torch.nn.Linear(hidden_dim, 1)
-        self.linear6_1 = torch.nn.Linear(hidden_dim, 1)
-        self.linear6_2 = torch.nn.Linear(hidden_dim, 1)
-        self.linear6_3 = torch.nn.Linear(hidden_dim, num_inputs)
         self.LN3 = torch.nn.LayerNorm(hidden_dim)
         self.LN4 = torch.nn.LayerNorm(hidden_dim)
 
@@ -88,17 +67,14 @@ class Q_phi_Network(torch.nn.Module):
         
         x1 = self.LN1(torch.nn.functional.relu(self.linear1(xu)))
         phi1 = self.LN2(torch.nn.functional.relu(self.linear2(x1)))
-        x1 = self.linear3_1(phi1)
-        r1 = self.linear3_2(phi1)
-        ns1 = self.linear3_3(phi1)
+        x1 = self.linear3(phi1)
 
         x2 = self.LN3(torch.nn.functional.relu(self.linear4(xu)))
         phi2 = self.LN4(torch.nn.functional.relu(self.linear5(x2)))
-        x2 = self.linear6_1(phi2)
-        r2 = self.linear6_2(phi2)
-        ns2 = self.linear6_3(phi2)
+        x2 = self.linear6(phi2)
 
-        return x1, x2,r1,r2,ns1,ns2, phi1, phi2
+
+        return x1, x2, phi1, phi2
 
 
 class GaussianPolicy(torch.nn.Module):

@@ -1,4 +1,5 @@
 import math
+import numpy
 import gym
 from gym import spaces
 class ContiSwimEnv(gym.Env):
@@ -34,6 +35,9 @@ class ContiSwimEnv(gym.Env):
         info = {}
         self.last_state = n_state
         return self._obs(n_state),reward,done,info
+    
+    def close(self):
+        pass
 
     def _obs(self,state):
-        return state*self.obs_coef
+        return numpy.array([state*self.obs_coef])

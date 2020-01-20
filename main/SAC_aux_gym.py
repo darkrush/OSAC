@@ -11,7 +11,7 @@ from utils.logger import Singleton_logger as logger
 
 from src.torch_memory import Memory
 from src.task_set import TaskSet
-from src.SAC_model import ValueNetwork,Q_phi_Network,QNetwork,GaussianPolicy,DeterministicPolicy
+from src.SAC_model import Q_phi_Network,GaussianPolicy,DeterministicPolicy
 from src.gym_evaluation import gym_evaluate
 
 DEFAULT_DEVICE = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
@@ -27,13 +27,13 @@ class SAC(object):
         self.target_update_interval = args.target_update_interval
         self.automatic_entropy_tuning = args.automatic_entropy_tuning
 
-        self.matrix = torch.zeros(256,256).to(DEFAULT_DEVICE)
+        self.matrix = torch.zeros(256,256,dtype = torch.float64).to(DEFAULT_DEVICE)
         self.eig_value , self.eig_vector = torch.symeig(self.matrix, eigenvectors=True, )
         self.feature_number = 1
         #self.inv_matrix = torch.inverse(self.matrix+10.0*torch.eye(256,256).to(DEFAULT_DEVICE))
         self.dirty_batch = [[],[]]
 
-        self.critic = Q_phi_Network(num_inputs, action_space.shape[0]).to(DEFAULT_DEVICE)
+        self.critic = Q_phi_Network(num_inputs, action_space.shape[0],hidden_dim = args.hidden).to(DEFAULT_DEVICE)
         self.critic_optim = torch.optim.Adam(self.critic.parameters(), lr=args.lr)
 
         self.critic_target = Q_phi_Network(num_inputs, action_space.shape[0]).to(DEFAULT_DEVICE)
@@ -47,22 +47,22 @@ class SAC(object):
                 self.log_alpha = torch.zeros(1, requires_grad=True, device=DEFAULT_DEVICE)
                 self.alpha_optim = torch.optim.Adam([self.log_alpha], lr=args.lr)
 
-            self.policy = GaussianPolicy(num_inputs, action_space.shape[0],action_space = action_space).to(DEFAULT_DEVICE)
+            self.policy = GaussianPolicy(num_inputs, action_space.shape[0],hidden_dim = args.hidden,action_space = action_space).to(DEFAULT_DEVICE)
             self.policy_optim = torch.optim.Adam(self.policy.parameters(), lr=args.lr)
 
         else:
             self.alpha = 0
             self.automatic_entropy_tuning = False
-            self.policy = DeterministicPolicy(num_inputs, action_space.shape[0],action_space = action_space).to(DEFAULT_DEVICE)
+            self.policy = DeterministicPolicy(num_inputs, action_space.shape[0],hidden_dim = args.hidden,action_space = action_space).to(DEFAULT_DEVICE)
             self.policy_optim = torch.optim.Adam(self.policy.parameters(), lr=args.lr)
 
     def select_action(self, state, eval=False):
-        #state = torch.FloatTensor(state).to(DEFAULT_DEVICE).unsqueeze(0)
+        state = torch.FloatTensor(state).to(DEFAULT_DEVICE).unsqueeze(0)
         if eval == False:
             action, _, _ = self.policy.sample(state)
         else:
             _, _, action = self.policy.sample(state)
-        action = torch.clamp(action, min = -1.0, max = 1.0) 
+        action = action.detach().cpu().numpy()[0]
         return action
 
     def update_matrix(self,state,action):
@@ -74,13 +74,16 @@ class SAC(object):
         if len(self.dirty_batch[0])>=100:
             with torch.no_grad():
                 state_batch = torch.tensor(self.dirty_batch[0],dtype=torch.float32).squeeze(1).to(DEFAULT_DEVICE)
-                action_batch = torch.tensor(self.dirty_batch[1],dtype=torch.float32).squeeze(1).to(DEFAULT_DEVICE)
-                _, _,_,_,_,_,phi1, _ = self.critic(state_batch, action_batch)
-
-                p_sum = torch.mm(phi1.transpose(0,1),phi1)
+                action_batch = torch.tensor(numpy.array(self.dirty_batch[1]),dtype=torch.float32)
+                action_batch = action_batch.squeeze(1)
+                action_batch = action_batch.to(DEFAULT_DEVICE)
+                if len(action_batch.size()) == 1:
+                    action_batch = action_batch.unsqueeze(1)
+                _, _,phi1, _ = self.critic(state_batch, action_batch)
+                double_phi = phi1.to(torch.float64)
+                p_sum = torch.mm(double_phi.transpose(0,1),double_phi)
                 self.matrix=self.matrix+p_sum
                 self.eig_value , self.eig_vector = torch.symeig(self.matrix, eigenvectors=True, )
-                #self.inv_matrix = torch.cholesky_inverse(torch.cholesky(self.matrix+100*torch.eye(256,256).to(DEFAULT_DEVICE)))
                 self.dirty_batch = [[],[]]
 
 
@@ -90,17 +93,16 @@ class SAC(object):
         next_state_batch = batch['obs1']
         reward_batch =     batch['rewards']
         mask_batch =       batch['terminals1']
-        qf1, qf2,r1,r2,ns1,ns2, phi1, _ = self.critic(state_batch, action_batch)  # Two Q-functions to mitigate positive bias in the policy improvement step
+        qf1, qf2, phi1, phi2 = self.critic(state_batch, action_batch)  # Two Q-functions to mitigate positive bias in the policy improvement step
 
         with torch.no_grad():
-            
-            temp_phi_squre = torch.mm(phi1, self.eig_vector)**2
+            double_phi = phi1.to(torch.float64)
+            temp_phi_squre = torch.mm(double_phi, self.eig_vector)**2
             temp_eig_value = self.eig_value+10.0
             UCB = torch.sum(temp_phi_squre/temp_eig_value,1,keepdim = True)
-            #UCB = torch.sum(torch.mm(phi1,self.inv_matrix)*phi1,1,keepdim = True)
-            UCB = args.beta*(UCB**0.5)
+            UCB = args.beta*(UCB**0.5).to(torch.float32)
             next_state_action, next_state_log_pi, _ = self.policy.sample(next_state_batch)
-            qf1_next_target, qf2_next_target,_,_,_,_,_,_ = self.critic_target(next_state_batch, next_state_action)
+            qf1_next_target, qf2_next_target,_,_ = self.critic_target(next_state_batch, next_state_action)
             min_qf_next_target = torch.min(qf1_next_target, qf2_next_target) - self.alpha * next_state_log_pi
             next_q_value = reward_batch + UCB + mask_batch * self.gamma * (min_qf_next_target)
             UCB_logs = UCB.mean().cpu()
@@ -109,25 +111,21 @@ class SAC(object):
 
         qf1_loss = torch.nn.functional.mse_loss(qf1, next_q_value) # JQ = 𝔼(st,at)~D[0.5(Q1(st,at) - r(st,at) - γ(𝔼st+1~p[V(st+1)]))^2]
         qf2_loss = torch.nn.functional.mse_loss(qf2, next_q_value) # JQ = 𝔼(st,at)~D[0.5(Q1(st,at) - r(st,at) - γ(𝔼st+1~p[V(st+1)]))^2]
-        r1_loss = torch.nn.functional.mse_loss(r1, reward_batch)
-        r2_loss = torch.nn.functional.mse_loss(r2, reward_batch)
-        ns1_loss = torch.nn.functional.mse_loss(ns1, next_state_batch)
-        ns2_loss = torch.nn.functional.mse_loss(ns2, next_state_batch)
-
+        
         pi, log_pi, _ = self.policy.sample(state_batch)
 
-        qf1_pi, qf2_pi,_,_,_,_,_,_ = self.critic(state_batch, pi)
+        qf1_pi, qf2_pi,_,_ = self.critic(state_batch, pi)
 
         min_qf_pi = torch.min(qf1_pi, qf2_pi)
 
         policy_loss = ((self.alpha * log_pi) - min_qf_pi).mean() # Jπ = 𝔼st∼D,εt∼N[α * logπ(f(εt;st)|st) − Q(st,f(εt;st))]
 
         self.critic_optim.zero_grad()
-        (qf1_loss+args.aux_coef*(r1_loss+ns1_loss)).backward()
+        qf1_loss.backward()
         self.critic_optim.step()
 
         self.critic_optim.zero_grad()
-        (qf2_loss+args.aux_coef*(r2_loss+ns2_loss)).backward()
+        qf2_loss.backward()
         self.critic_optim.step()
         
         self.policy_optim.zero_grad()
@@ -151,7 +149,7 @@ class SAC(object):
             for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
                 target_param.data.copy_(target_param.data * (1.0 - self.tau) + param.data * self.tau)
 
-        return qf1_loss.item(), qf2_loss.item(),r1_loss.item(),r2_loss.item(),ns1_loss.item(),ns2_loss.item(), policy_loss.item(), alpha_loss.item(), alpha_tlogs.item(), UCB_logs.item()
+        return qf1_loss.item(), qf2_loss.item(), policy_loss.item(), alpha_loss.item(), alpha_tlogs.item(), UCB_logs.item()
     
     def save_model(self, env_name, suffix="", actor_path=None, critic_path=None):
         if not os.path.exists('models/'):
@@ -173,7 +171,12 @@ class SAC(object):
             self.critic.load_state_dict(torch.load(critic_path))
 
 def run():
-    env = gym.make(args.exp_name)
+    if args.exp_name == 'swim':
+        task_set = TaskSet(args.exp_name)
+        task_set.set_coef(args)
+        env = task_set.get_env()
+    else:
+        env = gym.make(args.exp_name)
         
     memory = Memory(args.buffer_size,env.action_space.shape,env.observation_space.shape,DEFAULT_DEVICE)
     agent = SAC(env.observation_space.shape[0], env.action_space)
@@ -182,35 +185,29 @@ def run():
     updates = 0
     last_state = env.reset()
     cum_reward = 0
+
+
     for epoch in range(args.epoch_number+1):
         for _ in range(args.rollout_step):
-
-            obs = torch.tensor(last_state,dtype= torch.float32).to(DEFAULT_DEVICE).squeeze().unsqueeze(0)
-            with torch.no_grad():
-                action = agent.select_action(obs,eval = False).squeeze().cpu().numpy()
+            action = agent.select_action(last_state,eval = False)
             state_n, reward, done, info = env.step(action)
 
-            state_n = state_n.tolist()
-
-
+            masks = 1.0
             if done :
                 logger.append_data('cum_reward',data_idx,cum_reward)
                 cum_reward = 0.0
                 state_n = env.reset()
-            masks = 1.0
-            if done:
                 if 'TimeLimit.truncated' in info.keys():
                     masks = 1.0 if info['TimeLimit.truncated'] else 0.0
                 else:
                     masks = 0.0
+
             if args.exp_name == 'ccb':
                 masks = 0.0
+
             agent.update_matrix(last_state,action)
-            memory.add(numpy.array(last_state).squeeze().tolist(),
-                       action,
-                       [reward],
-                       numpy.array(state_n).squeeze().tolist(),
-                       [masks])
+            
+            memory.add(last_state, action, reward, state_n, masks)
 
             last_state = state_n
             cum_reward+=reward
@@ -218,7 +215,7 @@ def run():
 
         for i in range(args.updates_per_step):
             # Update parameters of all the networks
-            critic_1_loss, critic_2_loss,r1_loss,r2_loss,ns1_loss,ns2_loss, policy_loss, ent_loss, alpha,UCB = agent.update_parameters(memory, updates)
+            critic_1_loss, critic_2_loss, policy_loss, ent_loss, alpha,UCB = agent.update_parameters(memory, updates)
             updates += 1
 
 
@@ -233,10 +230,6 @@ def run():
         if (1+epoch)%100 ==0:
             logger.append_data('critic_1_loss',data_idx,critic_1_loss)
             logger.append_data('critic_2_loss',data_idx,critic_2_loss)
-            logger.append_data('r1_loss',data_idx,r1_loss)
-            logger.append_data('r2_loss',data_idx,r2_loss)
-            logger.append_data('ns1_loss',data_idx,ns1_loss)
-            logger.append_data('ns2_loss',data_idx,ns2_loss)
             logger.append_data('policy_loss',data_idx,policy_loss)
             logger.append_data('ent_loss',data_idx,ent_loss)
             logger.append_data('alpha',data_idx,alpha)
@@ -246,12 +239,10 @@ def run():
                            'UCB: %f, '%UCB +
                            'critic_1_loss: %f, '%critic_1_loss +
                            'critic_2_loss: %f, '%critic_2_loss +
-                           'r1_loss: %f, '%r1_loss +
-                           'r2_loss: %f, '%r2_loss +
-                           'ns1_loss: %f, '%ns1_loss +
-                           'ns2_loss: %f, '%ns2_loss +
                            'policy_loss: %f, '%policy_loss +
                            'ent_loss: %f, '%ent_loss +
                            'alpha: %f, '%alpha)
             logger.dump_log()
             logger.dump_data(True)
+
+    env.close()

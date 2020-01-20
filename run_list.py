@@ -5,8 +5,8 @@ from multiprocessing import Process
 from multiprocessing import Manager
 
 
-MAX_TASK_NUM = [2,2]
-DEVICE_LIST = ['0','1']
+MAX_TASK_NUM = [2,2,2,2,2,2,2,2]
+DEVICE_LIST = ['0','1','2','3','4','5','6','7']
 
 m = Manager()
 #task_number_list = m.list([MAX_TASK_NUM for i in DEVICE_LIST])

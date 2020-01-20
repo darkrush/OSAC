@@ -1,4 +1,12 @@
-python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp-dir results/CMC_SAC_phi_gauss_aux0.0_0.0 --beta 0.0 --aux_coef 0.0
-python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp-dir results/CMC_SAC_phi_gauss_aux0.1_0.0 --beta 0.0 --aux_coef 0.1
-python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp-dir results/CMC_SAC_phi_gauss_aux0.0_10.0 --beta 10 --aux_coef 0.0
-python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp-dir results/CMC_SAC_phi_gauss_aux0.1_10.0 --beta 10 --aux_coef 0.1
+python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp_name HalfCheetahBulletEnv-v0 --exp-dir results/HCB_OSAC_beta0.0 --beta 0.0 --aux_coef 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp_name HalfCheetahBulletEnv-v0 --exp-dir results/HCB_OSAC_beta10.0 --beta 10 --aux_coef 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp_name AntBulletEnv-v0 --exp-dir results/AntB_OSAC_beta0.0 --beta 0.0 --aux_coef 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp_name AntBulletEnv-v0 --exp-dir results/AntB_OSAC_beta10.0 --beta 10 --aux_coef 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp_name HopperBulletEnv-v0 --exp-dir results/HPB_OSAC_beta0.0 --beta 0.0 --aux_coef 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp_name HopperBulletEnv-v0 --exp-dir results/HPB_OSAC_beta10.0 --beta 10 --aux_coef 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp_name Walker2DBulletEnv-v0 --exp-dir results/W2B_OSAC_beta0.0 --beta 0.0 --aux_coef 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp_name Walker2DBulletEnv-v0 --exp-dir results/W2B_OSAC_beta10.0 --beta 10 --aux_coef 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp_name PusherBulletEnv-v0 --exp-dir results/PSB_OSAC_beta0.0 --beta 0.0 --aux_coef 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp_name PusherBulletEnv-v0 --exp-dir results/PSB_OSAC_beta10.0 --beta 10 --aux_coef 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp_name ReacherBulletEnv-v0 --exp-dir results/RCB_OSAC_beta0.0 --beta 0.0 --aux_coef 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp_name ReacherBulletEnv-v0 --exp-dir results/RCB_OSAC_beta10.0 --beta 10 --aux_coef 0.0

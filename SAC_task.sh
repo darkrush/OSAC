@@ -1,8 +1,16 @@
-python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_0.0_Hswim_00.1_greedy --beta 0.0 --aux_coef 0.0 --task_coef00 00.1 --task_coef05 -0.5
-python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_0.0_Hswim_0.07_greedy --beta 0.0 --aux_coef 0.0 --task_coef00 0.07 --task_coef05 -0.5
-python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_0.0_Hswim_0.05_greedy --beta 0.0 --aux_coef 0.0 --task_coef00 0.05 --task_coef05 -0.5
-python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_0.0_Hswim_0.036_greedy --beta 0.0 --aux_coef 0.0 --task_coef00 0.036 --task_coef05 -0.5
-python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_10_Hswim_00.1_greedy --beta 10 --aux_coef 0.0   --task_coef00 00.1 --task_coef05 -0.5
-python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_10_Hswim_0.07_greedy --beta 10 --aux_coef 0.0   --task_coef00 0.07 --task_coef05 -0.5
-python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_10_Hswim_0.05_greedy --beta 10 --aux_coef 0.0   --task_coef00 0.05 --task_coef05 -0.5
-python runner.py main/SAC_aux_gym.py --config configs/SAC_gym_exp.yaml --exp-dir results/2SAC_phi_gauss_aux0_10_Hswim_0.036_greedy --beta 10 --aux_coef 0.0   --task_coef00 0.036 --task_coef05 -0.5
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta0.0_f0.0_Hswim_0.05  --beta 0.0 --task_coef02 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta0.0_f1.0_Hswim_0.05  --beta 0.0 --task_coef02 1.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta0.0_f2.0_Hswim_0.05  --beta 0.0 --task_coef02 2.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta0.0_f3.0_Hswim_0.05  --beta 0.0 --task_coef02 3.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta10.0_f0.0_Hswim_0.05  --beta 10.0 --task_coef02 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta10.0_f1.0_Hswim_0.05  --beta 10.0 --task_coef02 1.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta10.0_f2.0_Hswim_0.05  --beta 10.0 --task_coef02 2.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta10.0_f3.0_Hswim_0.05  --beta 10.0 --task_coef02 3.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta0.0_A0.0_Hswim_0.05  --beta 0.0 --task_coef01 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta0.0_A0.5_Hswim_0.05  --beta 0.0 --task_coef01 0.5
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta0.0_A0.8_Hswim_0.05  --beta 0.0 --task_coef01 0.8
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta0.0_A0.3_Hswim_0.05  --beta 0.0 --task_coef01 0.3
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta10.0_A0.0_Hswim_0.05  --beta 10.0 --task_coef01 0.0
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta10.0_A0.5_Hswim_0.05  --beta 10.0 --task_coef01 0.5
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta10.0_A0.8_Hswim_0.05  --beta 10.0 --task_coef01 0.8
+python runner.py main/SAC_aux_gym.py --config configs/SAC_swim_exp.yaml --exp-dir results/SAC_phi_gauss_beta10.0_A0.3_Hswim_0.05  --beta 10.0 --task_coef01 0.3
