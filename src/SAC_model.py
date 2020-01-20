@@ -21,23 +21,27 @@ class QNetwork(torch.nn.Module):
         self.linear1 = torch.nn.Linear(num_inputs + num_actions, hidden_dim)
         self.linear2 = torch.nn.Linear(hidden_dim, hidden_dim)
         self.linear3 = torch.nn.Linear(hidden_dim, 1)
+        self.LN1 = torch.nn.LayerNorm(hidden_dim)
+        self.LN2 = torch.nn.LayerNorm(hidden_dim)
 
         # Q2 architecture
         self.linear4 = torch.nn.Linear(num_inputs + num_actions, hidden_dim)
         self.linear5 = torch.nn.Linear(hidden_dim, hidden_dim)
         self.linear6 = torch.nn.Linear(hidden_dim, 1)
+        self.LN3 = torch.nn.LayerNorm(hidden_dim)
+        self.LN4 = torch.nn.LayerNorm(hidden_dim)
 
         self.apply(weights_init_)
 
     def forward(self, state, action):
         xu = torch.cat([state, action], 1)
         
-        x1 = torch.nn.functional.relu(self.linear1(xu))
-        x1 = torch.nn.functional.relu(self.linear2(x1))
+        x1 = self.LN1(torch.nn.functional.relu(self.linear1(xu)))
+        x1 = self.LN2(torch.nn.functional.relu(self.linear2(x1)))
         x1 = self.linear3(x1)
 
-        x2 = torch.nn.functional.relu(self.linear4(xu))
-        x2 = torch.nn.functional.relu(self.linear5(x2))
+        x2 = self.LN3(torch.nn.functional.relu(self.linear4(xu)))
+        x2 = self.LN4(torch.nn.functional.relu(self.linear5(x2)))
         x2 = self.linear6(x2)
 
         return x1, x2
@@ -72,7 +76,6 @@ class Q_phi_Network(torch.nn.Module):
         x2 = self.LN3(torch.nn.functional.relu(self.linear4(xu)))
         phi2 = self.LN4(torch.nn.functional.relu(self.linear5(x2)))
         x2 = self.linear6(phi2)
-
 
         return x1, x2, phi1, phi2
 
