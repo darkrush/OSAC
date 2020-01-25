@@ -81,7 +81,7 @@ class Q_phi_Network(torch.nn.Module):
 
 class Q_phi_separate_Network(torch.nn.Module):
     def __init__(self, num_inputs, num_actions, hidden_dim = 256):
-        super(Q_phi_Network, self).__init__()
+        super(Q_phi_separate_Network, self).__init__()
 
         # Q1 architecture
         self.linear1 = torch.nn.Linear(num_inputs + num_actions, hidden_dim)
