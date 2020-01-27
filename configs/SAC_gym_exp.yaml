@@ -7,12 +7,12 @@ tau: 0.005
 lr: 0.0003
 alpha: 0.2
 automatic_entropy_tuning: True
-epoch_number: 1000000
+epoch_number: 100000
 rollout_step: 1
 batch_size: 256
 hidden: 256
 weight_decay: 0.0001
 updates_per_step: 1
 target_update_interval: 1
-buffer_size: 1000000
+buffer_size: 100000
 seeds: [0,1,2,3,4,5,6,7,8,9]

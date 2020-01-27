@@ -4,6 +4,7 @@ import numpy
 import os
 import gym
 import pybullet_envs
+import gym_sparse_envs
 import sys
 sys.path.append("..")
 from utils.argpaser import Singleton_argpaser as args
