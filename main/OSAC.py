@@ -175,7 +175,11 @@ def run():
         env = task_set.get_env()
     else:
         env = gym.make(args.exp_name)
-        
+        if args.sparse_switch:
+            env.set_control_coef(0.0)
+        else:
+            env.set_control_coef(1.0)
+
     memory = Memory(args.buffer_size,env.action_space.shape,env.observation_space.shape,DEFAULT_DEVICE)
     agent = SAC(env.observation_space.shape[0], env.action_space)
 
